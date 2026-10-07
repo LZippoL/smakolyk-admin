@@ -229,7 +229,7 @@ class ReviewService implements IReviewService {
           const remaining = await this.getByRecipeId(recipeId);
           const newRating = remaining.length > 0
             ? Number((remaining.reduce((acc, r) => acc + r.rating, 0) / remaining.length).toFixed(1))
-            : 5.0;
+            : 0;
           await recipeService.update(recipeId, {
             rating: newRating,
             reviewsCount: remaining.length

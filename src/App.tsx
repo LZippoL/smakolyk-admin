@@ -641,8 +641,16 @@ export const App: React.FC = () => {
                                 <td className="p-4 hidden md:table-cell">
                                   <span className="capitalize text-stone-600 dark:text-stone-400">{recipe.difficulty}</span>
                                 </td>
-                                <td className="p-4 font-bold text-amber-500 whitespace-nowrap">
-                                  ★ {recipe.rating} <span className="text-xs text-stone-400 font-normal">({recipe.reviewsCount})</span>
+                                <td className="p-4 whitespace-nowrap">
+                                  {recipe.rating > 0 ? (
+                                    <span className="font-bold text-amber-500">
+                                      ★ {recipe.rating} <span className="text-xs text-stone-400 font-normal">({recipe.reviewsCount})</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-stone-400 font-medium">
+                                      ☆ 0 <span className="text-xs text-stone-500 font-normal">(0)</span>
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="p-4 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1">

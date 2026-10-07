@@ -38,7 +38,7 @@ function mapDbToRecipe(row: any): Recipe {
     servings: row.servings,
     calories: row.calories,
     image: row.image,
-    rating: Number(row.rating) || 5.0,
+    rating: row.rating !== undefined && row.rating !== null ? Number(row.rating) : 0,
     reviewsCount: row.reviews_count ?? row.reviewsCount ?? 0,
     dietary: row.dietary || {
       isVegetarian: false,

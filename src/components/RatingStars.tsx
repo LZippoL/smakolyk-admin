@@ -69,8 +69,11 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
         })}
       </div>
       {showScore && (
-        <span className="text-xs font-bold text-stone-900 dark:text-stone-100 ml-0.5">
-          {rating.toFixed(1)}
+        <span className={cn(
+          'text-xs font-bold ml-0.5',
+          rating > 0 ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 dark:text-stone-500'
+        )}>
+          {rating > 0 ? rating.toFixed(1) : '0'}
         </span>
       )}
       {reviewsCount !== undefined && (
