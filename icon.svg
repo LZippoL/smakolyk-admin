@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="darkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1917"/>
+      <stop offset="100%" stop-color="#0c0a09"/>
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="128" fill="url(#darkBg)"/>
+  
+  <!-- Subtle border -->
+  <rect x="8" y="8" width="496" height="496" rx="120" fill="none" stroke="#ea580c" stroke-width="4" stroke-opacity="0.4"/>
+  
+  <!-- Chef Hat / Cloche / Shield symbol in gradient -->
+  <g transform="translate(106, 96)">
+    <!-- Base plate -->
+    <rect x="30" y="250" width="240" height="20" rx="10" fill="url(#adminGrad)"/>
+    
+    <!-- Cloche cover dome -->
+    <path d="M 40 230 C 40 120, 100 80, 150 80 C 200 80, 260 120, 260 230 Z" fill="url(#adminGrad)"/>
+    
+    <!-- Handle handle on top -->
+    <circle cx="150" cy="65" r="22" fill="#fbbf24"/>
+    
+    <!-- Steam waves / sparkles -->
+    <path d="M 120 40 Q 110 20 125 10" stroke="#f97316" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M 150 35 Q 160 15 145 5" stroke="#f97316" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M 180 40 Q 170 20 185 10" stroke="#f97316" stroke-width="6" stroke-linecap="round" fill="none"/>
+    
+    <!-- Admin letter "С" / Star badge -->
+    <text x="150" y="195" font-family="system-ui, -apple-system, sans-serif" font-size="95" font-weight="900" fill="#ffffff" text-anchor="middle">С</text>
+  </g>
+</svg>
