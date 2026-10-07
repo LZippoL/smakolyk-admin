@@ -69,8 +69,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Борщ стає ще смачнішим на наступний день, коли всі інгредієнти обміняються ароматами.'
       }
     ],
-    rating: 4.9,
-    reviewsCount: 48,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-02-01T12:00:00Z',
@@ -130,8 +130,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Накрийте пательню кришкою на останні 3 хвилини, щоб сирники пропарились і стали високими.'
       }
     ],
-    rating: 4.95,
-    reviewsCount: 62,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-01-18T08:30:00Z',
     updatedAt: '2024-02-05T09:00:00Z',
@@ -191,8 +191,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 8
       }
     ],
-    rating: 4.88,
-    reviewsCount: 39,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-01-20T11:00:00Z',
     updatedAt: '2024-02-02T10:00:00Z',
@@ -252,8 +252,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 4
       }
     ],
-    rating: 4.92,
-    reviewsCount: 54,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-01-22T14:00:00Z',
     updatedAt: '2024-02-03T11:00:00Z',
@@ -309,8 +309,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Не перетримуйте на пару довше 6 хвилин, щоб тісто залишалося пухким і не осіло.'
       }
     ],
-    rating: 4.96,
-    reviewsCount: 31,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-01-25T16:00:00Z',
     updatedAt: '2024-02-04T12:00:00Z'
@@ -366,8 +366,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Ніколи не додавайте соус на включену конфорку, інакше замість шовковистого соусу вийде омлет.'
       }
     ],
-    rating: 4.97,
-    reviewsCount: 84,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-01-28T18:00:00Z',
     updatedAt: '2024-02-06T15:00:00Z',
@@ -429,8 +429,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Відваріть пасту al dente. Змішайте з гарячим рагу і подавайте з великою кількістю натертого пармезану.'
       }
     ],
-    rating: 4.89,
-    reviewsCount: 42,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-01-29T11:00:00Z',
     updatedAt: '2024-02-07T14:00:00Z'
@@ -486,8 +486,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 9
       }
     ],
-    rating: 4.93,
-    reviewsCount: 37,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-02-01T15:00:00Z',
     updatedAt: '2024-02-08T10:00:00Z'
@@ -546,8 +546,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 40
       }
     ],
-    rating: 4.94,
-    reviewsCount: 29,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-02-03T18:00:00Z',
     updatedAt: '2024-02-09T13:00:00Z'
@@ -605,8 +605,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Подавайте просто в пательні з теплим багетом або лавашем, щоб вмочати в рідкий жовток і томатний соус.'
       }
     ],
-    rating: 4.95,
-    reviewsCount: 52,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Аліна Савчук', role: 'Фуд-стиліст' },
     createdAt: '2024-02-04T09:00:00Z',
     updatedAt: '2024-02-10T11:00:00Z',
@@ -655,8 +655,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Коли маса схопиться у ніжний крем, посипте сиром і зеленню, зніміть з вогню і згорніть акуратним щільним рулетом. Змастіть зверху шматочком вершкового масла для блиску.'
       }
     ],
-    rating: 4.87,
-    reviewsCount: 26,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Аліна Савчук', role: 'Фуд-стиліст' },
     createdAt: '2024-02-05T08:00:00Z',
     updatedAt: '2024-02-11T09:00:00Z',
@@ -706,8 +706,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Викладіть на тарілку, полийте медом і прикрасьте свіжими ягодами.'
       }
     ],
-    rating: 4.91,
-    reviewsCount: 33,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-02-06T08:15:00Z',
     updatedAt: '2024-02-12T10:00:00Z',
@@ -760,8 +760,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Розкладіть вівсянку по тарілках, зверху викладіть карамельні яблука та підсмажені волоські горіхи.'
       }
     ],
-    rating: 4.86,
-    reviewsCount: 19,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-02-07T07:45:00Z',
     updatedAt: '2024-02-13T09:30:00Z',
@@ -816,8 +816,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Змішайте соус: майонез, гірчицю, тертий пармезан, ложку лимонного соку та подрібнений часник. Листя салату порвіть руками, перемішайте з соусом. Зверху викладіть нарізане тепле філе, половинки чері, сухарики та пелюстки пармезану.'
       }
     ],
-    rating: 4.93,
-    reviewsCount: 46,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-08T12:00:00Z',
     updatedAt: '2024-02-14T11:00:00Z',
@@ -863,8 +863,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Викладіть овочі у салатник, додайте оливки. Зверху викладіть цілий пласт або великі кубики фети. Щедро полийте якісною оливковою олією, посипте сухим орегано та сіллю.'
       }
     ],
-    rating: 4.89,
-    reviewsCount: 30,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-02-09T13:00:00Z',
     updatedAt: '2024-02-15T10:00:00Z',
@@ -907,8 +907,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Змішайте всі інгредієнти, заправте оливковою олією або йогуртом, приправте сіллю та перцем.'
       }
     ],
-    rating: 4.82,
-    reviewsCount: 22,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-02-10T11:00:00Z',
     updatedAt: '2024-02-16T09:00:00Z',
@@ -963,8 +963,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 4
       }
     ],
-    rating: 4.91,
-    reviewsCount: 35,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-02-11T12:00:00Z',
     updatedAt: '2024-02-17T11:00:00Z',
@@ -1016,8 +1016,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Збийте суп занурювальним блендером до шовковистої гладкості. Влийте теплі вершки, додайте сіль і мускатний горіх, прогрійте 2 хвилини без кипіння.'
       }
     ],
-    rating: 4.88,
-    reviewsCount: 28,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Аліна Савчук', role: 'Фуд-стиліст' },
     createdAt: '2024-02-12T13:00:00Z',
     updatedAt: '2024-02-18T10:00:00Z'
@@ -1067,8 +1067,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Подавайте з підсушеним на сковороді гарбузовим насінням і краплею олії.'
       }
     ],
-    rating: 4.87,
-    reviewsCount: 20,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-02-13T10:00:00Z',
     updatedAt: '2024-02-19T09:00:00Z'
@@ -1113,8 +1113,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         tip: 'Поливайте курку соком з дна форми кожні 15 хвилин для отримання супер-глянцевої скоринки.'
       }
     ],
-    rating: 4.96,
-    reviewsCount: 41,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-14T17:00:00Z',
     updatedAt: '2024-02-20T14:00:00Z',
@@ -1165,8 +1165,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 9
       }
     ],
-    rating: 4.92,
-    reviewsCount: 38,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-15T18:00:00Z',
     updatedAt: '2024-02-21T12:00:00Z'
@@ -1223,8 +1223,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 5
       }
     ],
-    rating: 4.98,
-    reviewsCount: 57,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-16T19:00:00Z',
     updatedAt: '2024-02-22T13:00:00Z',
@@ -1276,8 +1276,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 12
       }
     ],
-    rating: 4.88,
-    reviewsCount: 34,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-02-17T11:00:00Z',
     updatedAt: '2024-02-23T10:00:00Z',
@@ -1323,8 +1323,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 15
       }
     ],
-    rating: 4.95,
-    reviewsCount: 39,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-18T17:00:00Z',
     updatedAt: '2024-02-24T12:00:00Z'
@@ -1367,8 +1367,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 14
       }
     ],
-    rating: 4.96,
-    reviewsCount: 44,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-02-19T14:00:00Z',
     updatedAt: '2024-02-25T11:00:00Z',
@@ -1413,8 +1413,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 22
       }
     ],
-    rating: 4.89,
-    reviewsCount: 23,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-02-20T15:00:00Z',
     updatedAt: '2024-02-26T12:00:00Z'
@@ -1458,8 +1458,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 10
       }
     ],
-    rating: 4.81,
-    reviewsCount: 18,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-02-21T10:00:00Z',
     updatedAt: '2024-02-27T10:00:00Z',
@@ -1503,8 +1503,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 30
       }
     ],
-    rating: 4.94,
-    reviewsCount: 51,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-22T13:00:00Z',
     updatedAt: '2024-02-28T09:00:00Z',
@@ -1558,8 +1558,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 20
       }
     ],
-    rating: 4.97,
-    reviewsCount: 47,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-23T15:00:00Z',
     updatedAt: '2024-03-01T11:00:00Z'
@@ -1604,8 +1604,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 5
       }
     ],
-    rating: 4.85,
-    reviewsCount: 27,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-02-24T12:00:00Z',
     updatedAt: '2024-03-02T10:00:00Z',
@@ -1651,8 +1651,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 15
       }
     ],
-    rating: 4.96,
-    reviewsCount: 63,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-02-25T09:00:00Z',
     updatedAt: '2024-03-03T11:00:00Z',
@@ -1698,8 +1698,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 6
       }
     ],
-    rating: 4.89,
-    reviewsCount: 37,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-02-26T08:30:00Z',
     updatedAt: '2024-03-04T09:00:00Z',
@@ -1748,8 +1748,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Повністю охолодіть при кімнатній температурі, потім поставте в холодильник мінімум на 4 години.'
       }
     ],
-    rating: 4.98,
-    reviewsCount: 55,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-02-27T14:00:00Z',
     updatedAt: '2024-03-05T12:00:00Z',
@@ -1797,8 +1797,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Поставте в холодильник на 4-6 годин. Перед подачею рясно посипте какао через ситечко.'
       }
     ],
-    rating: 4.97,
-    reviewsCount: 68,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-02-28T16:00:00Z',
     updatedAt: '2024-03-06T15:00:00Z',
@@ -1846,8 +1846,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 9
       }
     ],
-    rating: 4.93,
-    reviewsCount: 36,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-03-01T15:00:00Z',
     updatedAt: '2024-03-07T11:00:00Z'
@@ -1896,8 +1896,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 38
       }
     ],
-    rating: 4.91,
-    reviewsCount: 43,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-03-02T13:00:00Z',
     updatedAt: '2024-03-08T10:00:00Z',
@@ -1942,8 +1942,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 12
       }
     ],
-    rating: 4.86,
-    reviewsCount: 25,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марія Коваль', role: 'Кондитер-аматор' },
     createdAt: '2024-03-03T11:00:00Z',
     updatedAt: '2024-03-09T09:00:00Z',
@@ -1984,8 +1984,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 20
       }
     ],
-    rating: 4.95,
-    reviewsCount: 32,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Оксана Мельник', role: 'Шеф української кухні' },
     createdAt: '2024-03-04T10:00:00Z',
     updatedAt: '2024-03-10T12:00:00Z',
@@ -2028,8 +2028,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'У глечик вичавіть сік 3 лимонів, додайте полуничне пюре, листочки м\'яти, лід та залийте холодною водою. Перемішайте.'
       }
     ],
-    rating: 4.92,
-    reviewsCount: 29,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Аліна Савчук', role: 'Фуд-стиліст' },
     createdAt: '2024-03-05T12:00:00Z',
     updatedAt: '2024-03-11T14:00:00Z',
@@ -2066,8 +2066,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Викладіть у чашу блендера шпинат, шматочки банана, очищене яблуко, насіння чіа та влийте рідину. Збивайте на високій швидкості 60 секунд до абсолютно гладкого стану.'
       }
     ],
-    rating: 4.88,
-    reviewsCount: 16,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Ірина Мельник', role: 'Нутриціолог' },
     createdAt: '2024-03-06T08:00:00Z',
     updatedAt: '2024-03-12T09:00:00Z',
@@ -2110,8 +2110,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         timerMinutes: 6
       }
     ],
-    rating: 4.93,
-    reviewsCount: 31,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Тарас Бондар', role: 'Кулінарний блогер' },
     createdAt: '2024-03-07T12:00:00Z',
     updatedAt: '2024-03-13T10:00:00Z',
@@ -2159,8 +2159,8 @@ export const INITIAL_RECIPES: Recipe[] = [
         instruction: 'Викладіть томатну начинку на хліб безпосередньо перед подачею, щоб скибочки залишалися хрусткими.'
       }
     ],
-    rating: 4.9,
-    reviewsCount: 24,
+    rating: 0,
+    reviewsCount: 0,
     author: { name: 'Марко Россі', role: 'Шеф-кухар' },
     createdAt: '2024-03-08T14:00:00Z',
     updatedAt: '2024-03-14T11:00:00Z',

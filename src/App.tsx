@@ -14,7 +14,9 @@ import {
   Smartphone,
   Filter,
   X,
-  RefreshCw
+  RefreshCw,
+  Bell,
+  BellRing
 } from 'lucide-react';
 import { Recipe, Article, Review } from './types';
 import { recipeService } from './services/recipeService';
@@ -104,6 +106,26 @@ export const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Browser Notifications state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => {
+    return typeof Notification !== 'undefined' ? Notification.permission : 'default';
+  });
+
+  const requestNotificationPermission = async () => {
+    if (typeof Notification === 'undefined') {
+      alert('Ваш браузер не підтримує сповіщення');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    setNotificationPermission(perm);
+    if (perm === 'granted') {
+      new Notification('🔔 Сповіщення активовано!', {
+        body: 'Тепер ви отримуватимете повідомлення при кожному новому відгуку на страву.',
+        icon: '/smakolyk-admin/icon-192.png'
+      });
+    }
+  };
+
   const loadData = () => {
     recipeService.getAll().then(setRecipes);
     articleService.getAll().then(setArticles);
@@ -113,6 +135,36 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (session) {
       loadData();
+
+      // Listen for realtime review inserts
+      const channel = supabase
+        .channel('admin-reviews-realtime')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'reviews' },
+          (payload) => {
+            const newRow = payload.new as any;
+            if (newRow && !newRow.user_name?.startsWith('[DELETED]')) {
+              // Reload data
+              loadData();
+
+              // Send system Notification if granted
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                new Notification('🍳 Новий відгук на страву!', {
+                  body: `${newRow.user_name || 'Користувач'} (★ ${newRow.rating || 5}): "${newRow.comment?.substring(0, 80) || ''}"`,
+                  icon: '/smakolyk-admin/icon-192.png',
+                  badge: '/smakolyk-admin/icon-192.png',
+                  tag: `review-${newRow.id}`
+                });
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [session]);
 
@@ -265,6 +317,26 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Push Notifications Toggle */}
+          {notificationPermission !== 'granted' ? (
+            <button
+              onClick={requestNotificationPermission}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm"
+              title="Увімкнути пуш-сповіщення про нові відгуки"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-pulse" />
+              <span className="hidden sm:inline">Сповіщення</span>
+            </button>
+          ) : (
+            <div 
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800"
+              title="Сповіщення про нові відгуки активні"
+            >
+              <BellRing className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden md:inline">Активні</span>
+            </div>
+          )}
+
           {/* Force Reload / Purge Cache */}
           <button
             onClick={handlePurgeCache}
