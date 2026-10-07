@@ -78,7 +78,9 @@ class RecipeService implements IRecipeService {
           .order('created_at', { ascending: false });
 
         if (!error && data && data.length > 0) {
-          const mapped = data.map(mapDbToRecipe);
+          const mapped = data
+            .filter(row => !row.id?.startsWith('__SYSTEM_') && row.category !== 'system')
+            .map(mapDbToRecipe);
           this.cache = mapped;
           this.lastFetchTime = Date.now();
           return mapped;

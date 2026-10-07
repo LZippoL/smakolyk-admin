@@ -16,22 +16,25 @@ import {
   X,
   RefreshCw,
   Bell,
-  BellRing
+  BellRing,
+  Users
 } from 'lucide-react';
 import { Recipe, Article, Review } from './types';
 import { recipeService } from './services/recipeService';
 import { articleService } from './services/articleService';
 import { reviewService } from './services/reviewService';
+import { userService } from './services/userService';
 import { supabase } from './services/supabaseClient';
 import { CATEGORIES } from './data/categories';
 import { AdminRecipeForm } from './components/AdminRecipeForm';
 import { AdminArticleForm } from './components/AdminArticleForm';
 import { AdminReviewsTab } from './components/AdminReviewsTab';
+import { AdminUsersTab } from './components/AdminUsersTab';
 import { AdminAuthGate } from './components/AdminAuthGate';
 import { Button } from './components/Button';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'recipes' | 'articles' | 'reviews'>('recipes');
+  const [activeTab, setActiveTab] = useState<'recipes' | 'articles' | 'reviews' | 'users'>('recipes');
 
   // Authentication State
   const [session, setSession] = useState<any>(null);
@@ -40,6 +43,7 @@ export const App: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [usersCount, setUsersCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -130,6 +134,7 @@ export const App: React.FC = () => {
     recipeService.getAll().then(setRecipes);
     articleService.getAll().then(setArticles);
     reviewService.getAll().then(setReviews);
+    userService.getAll().then(list => setUsersCount(list.length));
   };
 
   useEffect(() => {
@@ -168,7 +173,7 @@ export const App: React.FC = () => {
     }
   }, [session]);
 
-  const handleTabChange = (tab: 'recipes' | 'articles' | 'reviews') => {
+  const handleTabChange = (tab: 'recipes' | 'articles' | 'reviews' | 'users') => {
     setActiveTab(tab);
     setMode('list');
     setSearchQuery('');
@@ -436,13 +441,13 @@ export const App: React.FC = () => {
         {mode === 'list' && (
           <div className="space-y-6">
             {/* Ergonomic Section Navigation Segmented Controls */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-stone-900 p-2 sm:p-2.5 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-sm">
-              <nav className="grid grid-cols-3 gap-1.5 sm:gap-2 flex-1 max-w-xl">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-stone-900 p-2 sm:p-2.5 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-sm">
+              <nav className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 flex-1 max-w-3xl">
                 {/* Recipes Tab Button */}
                 <button
                   type="button"
                   onClick={() => handleTabChange('recipes')}
-                  className={`flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
                     activeTab === 'recipes'
                       ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-md shadow-brand-500/25 scale-[1.02]'
                       : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60'
@@ -463,7 +468,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleTabChange('reviews')}
-                  className={`flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
                     activeTab === 'reviews'
                       ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-md shadow-brand-500/25 scale-[1.02]'
                       : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60'
@@ -484,7 +489,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleTabChange('articles')}
-                  className={`flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
                     activeTab === 'articles'
                       ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-md shadow-brand-500/25 scale-[1.02]'
                       : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60'
@@ -500,10 +505,31 @@ export const App: React.FC = () => {
                     {articles.length}
                   </span>
                 </button>
+
+                {/* Users Tab Button */}
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('users')}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+                    activeTab === 'users'
+                      ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-md shadow-brand-500/25 scale-[1.02]'
+                      : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60'
+                  }`}
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span>Користувачі</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                    activeTab === 'users'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300'
+                  }`}>
+                    {usersCount}
+                  </span>
+                </button>
               </nav>
 
               {/* Action Button */}
-              {activeTab !== 'reviews' && (
+              {(activeTab === 'recipes' || activeTab === 'articles') && (
                 <Button
                   onClick={() => setMode(activeTab === 'recipes' ? 'create_recipe' : 'create_article')}
                   size="md"
@@ -514,6 +540,11 @@ export const App: React.FC = () => {
                 </Button>
               )}
             </div>
+
+            {/* Users Tab View */}
+            {activeTab === 'users' && (
+              <AdminUsersTab />
+            )}
 
             {/* Reviews Tab View */}
             {activeTab === 'reviews' && (
