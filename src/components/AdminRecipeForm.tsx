@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Clock, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Clock, Sparkles, Copy, Check } from 'lucide-react';
 import { Recipe, RecipeIngredient, CookingStep, RecipeCategory, CuisineType, Difficulty } from '../types';
 import { CATEGORIES, CUISINES } from '../data/categories';
 import { Button } from './Button';
 import { Input } from './Input';
 import { ImageUpload } from './ImageUpload';
+import { JsonRecipeImportModal } from './JsonRecipeImportModal';
 
 interface AdminRecipeFormProps {
   initialRecipe?: Partial<Recipe>;
@@ -58,6 +59,9 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
+  const [importSuccessBanner, setImportSuccessBanner] = useState<string | null>(null);
+  const [copiedCurrentJson, setCopiedCurrentJson] = useState(false);
 
   // Auto-generate slug from title (transliteration / slugify)
   const generateSlug = (text: string) => {
@@ -80,6 +84,70 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
     setTitle(val);
     if (autoSlug) {
       setSlug(generateSlug(val));
+    }
+  };
+
+  const handleApplyJsonRecipe = (data: any) => {
+    if (data.title) {
+      setTitle(data.title);
+      if (!data.slug) {
+        setSlug(generateSlug(data.title));
+        setAutoSlug(true);
+      }
+    }
+    if (data.slug) {
+      setSlug(data.slug);
+      setAutoSlug(false);
+    }
+    if (data.description !== undefined) setDescription(data.description);
+    if (data.image) setImage(data.image);
+    if (data.category) setCategory(data.category);
+    if (data.cuisine) setCuisine(data.cuisine);
+    if (data.prepTime !== undefined) setPrepTime(data.prepTime);
+    if (data.cookTime !== undefined) setCookTime(data.cookTime);
+    if (data.servings !== undefined) setServings(data.servings);
+    if (data.difficulty) setDifficulty(data.difficulty);
+    if (data.calories !== undefined) setCalories(data.calories);
+    if (data.protein !== undefined) setProtein(data.protein);
+    if (data.fat !== undefined) setFat(data.fat);
+    if (data.carbs !== undefined) setCarbs(data.carbs);
+    if (data.tags && data.tags.length > 0) setTagsInput(data.tags.join(', '));
+    if (data.ingredients && data.ingredients.length > 0) setIngredients(data.ingredients);
+    if (data.instructions && data.instructions.length > 0) setInstructions(data.instructions);
+    if (data.seoTitle) setSeoTitle(data.seoTitle);
+    if (data.seoDescription) setSeoDescription(data.seoDescription);
+
+    setImportSuccessBanner(`Рецепт "${data.title || 'з JSON'}" успішно імпортовано! Усі поля форми, інгредієнти та кроки заповнено.`);
+    setTimeout(() => setImportSuccessBanner(null), 6000);
+  };
+
+  const handleCopyAsJson = async () => {
+    const currentObj = {
+      title,
+      slug,
+      description,
+      category,
+      cuisine,
+      prepTime,
+      cookTime,
+      servings,
+      difficulty,
+      calories,
+      nutrition: { protein, fat, carbs, calories },
+      tags: tagsInput.split(',').map(t => t.trim()).filter(Boolean),
+      ingredients,
+      instructions,
+      image,
+      seoTitle,
+      seoDescription
+    };
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(currentObj, null, 2));
+      setCopiedCurrentJson(true);
+      setTimeout(() => setCopiedCurrentJson(false), 2500);
+    } catch {
+      alert('Не вдалося скопіювати у буфер обміну');
     }
   };
 
@@ -171,14 +239,67 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 bg-white dark:bg-stone-900 p-6 sm:p-10 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-xl max-w-4xl mx-auto">
-      <div>
-        <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
-          {isEditing ? 'Редагувати рецепт' : 'Створити новий рецепт'}
-        </h2>
-        <p className="text-sm text-stone-500 mt-1">
-          Заповніть форму нижче. Зміни зберігаються у вашій бібліотеці без потреби редагувати код.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200 dark:border-stone-800">
+        <div>
+          <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
+            {isEditing ? 'Редагувати рецепт' : 'Створити новий рецепт'}
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">
+            Заповніть форму вручну або скористайтеся миттєвим імпортом із ChatGPT.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCopyAsJson}
+            className="rounded-xl border-stone-300 dark:border-stone-700 text-stone-600 dark:text-stone-300"
+            title="Скопіювати поточний рецепт у буфер обміну як JSON"
+          >
+            {copiedCurrentJson ? (
+              <>
+                <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+                Скопійовано!
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 mr-1.5" />
+                Копіювати JSON
+              </>
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsJsonModalOpen(true)}
+            className="rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-700 hover:to-brand-700 text-white shadow-md shadow-purple-500/20 font-bold"
+            title="Імпортувати рецепт згенерований у ChatGPT"
+          >
+            <Sparkles className="w-4 h-4 mr-1.5 animate-pulse text-amber-300" />
+            Імпорт з ChatGPT / JSON
+          </Button>
+        </div>
       </div>
+
+      {/* Success notification banner after JSON import */}
+      {importSuccessBanner && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 flex items-center justify-between shadow-sm animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">✨</span>
+            <span className="text-sm font-semibold">{importSuccessBanner}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setImportSuccessBanner(null)}
+            className="text-xs text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 p-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Main Details */}
       <div className="space-y-4">
@@ -544,6 +665,12 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
           {isEditing ? 'Зберегти зміни' : 'Опублікувати рецепт'}
         </Button>
       </div>
+
+      <JsonRecipeImportModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        onApplyRecipe={handleApplyJsonRecipe}
+      />
     </form>
   );
 };
