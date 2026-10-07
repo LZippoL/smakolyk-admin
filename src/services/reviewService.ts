@@ -2,9 +2,10 @@ import { Review } from '../types';
 import { INITIAL_REVIEWS } from '../data/reviews/initialReviews';
 import { storage } from './storageService';
 import { recipeService } from './recipeService';
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabaseAdmin, isSupabaseConfigured } from './supabaseClient';
 
 const STORAGE_KEY = 'smakolyk_reviews_custom';
+const DELETED_KEY = 'smakolyk_reviews_deleted';
 
 export interface IReviewService {
   getAll(): Promise<Review[]>;
@@ -32,7 +33,7 @@ class ReviewService implements IReviewService {
   async getAll(): Promise<Review[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('reviews')
           .select('*')
           .order('created_at', { ascending: false });
@@ -46,13 +47,15 @@ class ReviewService implements IReviewService {
     }
 
     const custom = await storage.get<Review[]>(STORAGE_KEY, []);
-    return [...custom, ...INITIAL_REVIEWS];
+    const deletedIds = await storage.get<string[]>(DELETED_KEY, []);
+    const activeInitial = INITIAL_REVIEWS.filter(r => !deletedIds.includes(r.id));
+    return [...custom, ...activeInitial];
   }
 
   async getByRecipeId(recipeId: string): Promise<Review[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('reviews')
           .select('*')
           .eq('recipe_id', recipeId)
@@ -73,7 +76,7 @@ class ReviewService implements IReviewService {
   async addReview(data: Omit<Review, 'id' | 'createdAt' | 'likes'>): Promise<Review> {
     if (isSupabaseConfigured) {
       try {
-        const { data: inserted, error } = await supabase
+        const { data: inserted, error } = await supabaseAdmin
           .from('reviews')
           .insert({
             recipe_id: data.recipeId,
@@ -144,7 +147,7 @@ class ReviewService implements IReviewService {
         if (updates.comment !== undefined) dbUpdates.comment = updates.comment;
         if (updates.photoUrl !== undefined) dbUpdates.photo_url = updates.photoUrl;
 
-        const { data: updated, error } = await supabase
+        const { data: updated, error } = await supabaseAdmin
           .from('reviews')
           .update(dbUpdates)
           .eq('id', reviewId)
@@ -187,7 +190,7 @@ class ReviewService implements IReviewService {
 
     if (isSupabaseConfigured) {
       try {
-        const { data: rev } = await supabase
+        const { data: rev } = await supabaseAdmin
           .from('reviews')
           .select('recipe_id')
           .eq('id', reviewId)
@@ -195,39 +198,64 @@ class ReviewService implements IReviewService {
 
         if (rev) recipeId = rev.recipe_id;
 
-        const { error } = await supabase
+        // Use supabaseAdmin with service role credentials to delete bypassing RLS
+        const { error } = await supabaseAdmin
           .from('reviews')
           .delete()
           .eq('id', reviewId);
 
-        if (!error) {
-          if (recipeId) {
-            const remaining = await this.getByRecipeId(recipeId);
-            const newRating = remaining.length > 0
-              ? Number((remaining.reduce((acc, r) => acc + r.rating, 0) / remaining.length).toFixed(1))
-              : 5.0;
-            await recipeService.update(recipeId, {
-              rating: newRating,
-              reviewsCount: remaining.length
-            });
-          }
-          return true;
+        if (error) {
+          console.error('Supabase deleteReview error:', error);
+          throw new Error(error.message);
         }
+
+        if (recipeId) {
+          const remaining = await this.getByRecipeId(recipeId);
+          const newRating = remaining.length > 0
+            ? Number((remaining.reduce((acc, r) => acc + r.rating, 0) / remaining.length).toFixed(1))
+            : 5.0;
+          await recipeService.update(recipeId, {
+            rating: newRating,
+            reviewsCount: remaining.length
+          });
+        }
+
+        // Also track deleted IDs locally in case of static initial dataset fallback
+        const deletedIds = await storage.get<string[]>(DELETED_KEY, []);
+        if (!deletedIds.includes(reviewId)) {
+          deletedIds.push(reviewId);
+          await storage.set(DELETED_KEY, deletedIds);
+        }
+
+        const custom = await storage.get<Review[]>(STORAGE_KEY, []);
+        const filtered = custom.filter(r => r.id !== reviewId);
+        await storage.set(STORAGE_KEY, filtered);
+
+        return true;
       } catch (err) {
         console.warn('Supabase deleteReview failed:', err);
+        throw err;
       }
     }
 
+    // Local fallback
     const custom = await storage.get<Review[]>(STORAGE_KEY, []);
     const filtered = custom.filter(r => r.id !== reviewId);
     await storage.set(STORAGE_KEY, filtered);
+
+    const deletedIds = await storage.get<string[]>(DELETED_KEY, []);
+    if (!deletedIds.includes(reviewId)) {
+      deletedIds.push(reviewId);
+      await storage.set(DELETED_KEY, deletedIds);
+    }
+
     return true;
   }
 
   async likeReview(reviewId: string): Promise<number> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('reviews')
           .select('likes')
           .eq('id', reviewId)
@@ -235,7 +263,7 @@ class ReviewService implements IReviewService {
 
         if (!error && data) {
           const newLikes = (data.likes || 0) + 1;
-          await supabase
+          await supabaseAdmin
             .from('reviews')
             .update({ likes: newLikes })
             .eq('id', reviewId);

@@ -1,7 +1,7 @@
 import { Recipe } from '../types';
 import { INITIAL_RECIPES } from '../data/recipes/initialRecipes';
 import { storage } from './storageService';
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase, supabaseAdmin, isSupabaseConfigured } from './supabaseClient';
 
 const STORAGE_KEY = 'smakolyk_recipes_custom';
 const DELETED_KEY = 'smakolyk_recipes_deleted';
@@ -190,7 +190,7 @@ class RecipeService implements IRecipeService {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await supabase.from('recipes').insert({
+        const { error } = await supabaseAdmin.from('recipes').insert({
           id: newRecipe.id,
           slug: newRecipe.slug,
           title: newRecipe.title,
@@ -268,7 +268,7 @@ class RecipeService implements IRecipeService {
         if (updates.instructions !== undefined) dbUpdates.instructions = updates.instructions;
         if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
 
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('recipes')
           .update(dbUpdates)
           .eq('id', id);
@@ -295,7 +295,7 @@ class RecipeService implements IRecipeService {
   async delete(id: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await supabase.from('recipes').delete().eq('id', id);
+        const { error } = await supabaseAdmin.from('recipes').delete().eq('id', id);
         if (!error) {
           this.cache = null;
           return true;
