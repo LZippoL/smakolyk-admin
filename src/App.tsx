@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Smartphone,
   Filter,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { Recipe, Article, Review } from './types';
 import { recipeService } from './services/recipeService';
@@ -225,6 +226,22 @@ export const App: React.FC = () => {
     a.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handlePurgeCache = async () => {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      for (const k of keys) {
+        await caches.delete(k);
+      }
+    }
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 flex flex-col">
       {/* Top Navbar */}
@@ -248,6 +265,15 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Force Reload / Purge Cache */}
+          <button
+            onClick={handlePurgeCache}
+            className="p-2 rounded-xl text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            title="Оновити кеш додатку"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
           {/* Install PWA Button */}
           {!isInstalled && (
             <button
@@ -256,7 +282,7 @@ export const App: React.FC = () => {
               title="Встановити панель як додаток на екран"
             >
               <Smartphone className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Встановити додаток</span>
+              <span>Встановити</span>
             </button>
           )}
 
