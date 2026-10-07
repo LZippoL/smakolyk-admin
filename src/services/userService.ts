@@ -36,10 +36,10 @@ export function isUserMutedActive(user: UserProfileRecord | null | undefined): b
 class UserService {
   private memoryCache: UserProfileRecord[] | null = null;
   private lastFetch = 0;
-  private readonly CACHE_TTL = 10_000; // 10 seconds
+  private readonly CACHE_TTL = 5_000; // 5 seconds
 
-  async getAll(): Promise<UserProfileRecord[]> {
-    if (this.memoryCache && Date.now() - this.lastFetch < this.CACHE_TTL) {
+  async getAll(forceFresh = true): Promise<UserProfileRecord[]> {
+    if (!forceFresh && this.memoryCache && Date.now() - this.lastFetch < this.CACHE_TTL) {
       return this.memoryCache;
     }
 
@@ -76,7 +76,7 @@ class UserService {
 
   async getById(idOrFriendlyIdOrEmail: string): Promise<UserProfileRecord | null> {
     if (!idOrFriendlyIdOrEmail) return null;
-    const users = await this.getAll();
+    const users = await this.getAll(true);
     const query = idOrFriendlyIdOrEmail.toLowerCase().trim();
     return (
       users.find(
@@ -94,8 +94,14 @@ class UserService {
     await storage.set(STORAGE_KEY, users);
 
     if (isSupabaseConfigured) {
-      try {
-        await supabase
+      const { error } = await supabase
+        .from('recipes')
+        .update({ description: JSON.stringify(users) })
+        .eq('id', SYSTEM_STORE_ID);
+
+      if (error) {
+        // If row doesn't exist, try upsert
+        const upsertRes = await supabase
           .from('recipes')
           .upsert({
             id: SYSTEM_STORE_ID,
@@ -119,15 +125,24 @@ class UserService {
             tags: ['system'],
             author: { name: 'system' }
           });
-      } catch (err) {
-        console.error('Failed to sync users to Supabase:', err);
+
+        if (upsertRes.error) {
+          console.error('Failed to sync users to Supabase:', upsertRes.error);
+          throw new Error(upsertRes.error.message);
+        }
       }
     }
   }
 
   async banUser(userId: string, reason?: string): Promise<UserProfileRecord> {
-    const users = await this.getAll();
-    const idx = users.findIndex((u) => u.id === userId || u.friendlyId === userId);
+    const users = await this.getAll(true);
+    const query = userId.toLowerCase().trim();
+    const idx = users.findIndex(
+      (u) =>
+        u.id.toLowerCase() === query ||
+        u.friendlyId.toLowerCase() === query ||
+        u.email.toLowerCase() === query
+    );
     if (idx === -1) throw new Error('Користувача не знайдено');
 
     users[idx] = {
@@ -141,8 +156,14 @@ class UserService {
   }
 
   async unbanUser(userId: string): Promise<UserProfileRecord> {
-    const users = await this.getAll();
-    const idx = users.findIndex((u) => u.id === userId || u.friendlyId === userId);
+    const users = await this.getAll(true);
+    const query = userId.toLowerCase().trim();
+    const idx = users.findIndex(
+      (u) =>
+        u.id.toLowerCase() === query ||
+        u.friendlyId.toLowerCase() === query ||
+        u.email.toLowerCase() === query
+    );
     if (idx === -1) throw new Error('Користувача не знайдено');
 
     users[idx] = {
@@ -160,8 +181,14 @@ class UserService {
     durationDays: number = 7,
     reason?: string
   ): Promise<UserProfileRecord> {
-    const users = await this.getAll();
-    const idx = users.findIndex((u) => u.id === userId || u.friendlyId === userId);
+    const users = await this.getAll(true);
+    const query = userId.toLowerCase().trim();
+    const idx = users.findIndex(
+      (u) =>
+        u.id.toLowerCase() === query ||
+        u.friendlyId.toLowerCase() === query ||
+        u.email.toLowerCase() === query
+    );
     if (idx === -1) throw new Error('Користувача не знайдено');
 
     let mutedUntil: string;
@@ -185,8 +212,14 @@ class UserService {
   }
 
   async unmuteUser(userId: string): Promise<UserProfileRecord> {
-    const users = await this.getAll();
-    const idx = users.findIndex((u) => u.id === userId || u.friendlyId === userId);
+    const users = await this.getAll(true);
+    const query = userId.toLowerCase().trim();
+    const idx = users.findIndex(
+      (u) =>
+        u.id.toLowerCase() === query ||
+        u.friendlyId.toLowerCase() === query ||
+        u.email.toLowerCase() === query
+    );
     if (idx === -1) throw new Error('Користувача не знайдено');
 
     users[idx] = {
@@ -201,8 +234,14 @@ class UserService {
   }
 
   async deleteUser(userId: string): Promise<void> {
-    const users = await this.getAll();
-    const filtered = users.filter((u) => u.id !== userId && u.friendlyId !== userId);
+    const users = await this.getAll(true);
+    const query = userId.toLowerCase().trim();
+    const filtered = users.filter(
+      (u) =>
+        u.id.toLowerCase() !== query &&
+        u.friendlyId.toLowerCase() !== query &&
+        u.email.toLowerCase() !== query
+    );
     await this.saveAll(filtered);
   }
 }

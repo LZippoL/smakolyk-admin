@@ -69,14 +69,16 @@ export const AdminUsersTab: React.FC = () => {
     try {
       if (selectedUserForBan.isBanned) {
         await userService.unbanUser(selectedUserForBan.id);
+        alert('✓ Акаунт успішно розблоковано!');
       } else {
         await userService.banUser(selectedUserForBan.id, banReason);
+        alert('✓ Акаунт успішно заблоковано!');
       }
       setBanModalOpen(false);
       setSelectedUserForBan(null);
       await loadUsers();
-    } catch (e) {
-      alert('Помилка при зміні статусу бану');
+    } catch (e: any) {
+      alert(`Помилка при зміні статусу бану: ${e?.message || 'Не вдалося зберегти'}`);
     }
   };
 
@@ -92,14 +94,16 @@ export const AdminUsersTab: React.FC = () => {
     try {
       if (isUserMutedActive(selectedUserForMute)) {
         await userService.unmuteUser(selectedUserForMute.id);
+        alert('✓ Обмеження на коментарі знято!');
       } else {
         await userService.muteUser(selectedUserForMute.id, muteDurationDays, muteReason);
+        alert('✓ Обмеження на публікацію коментарів успішно застосовано!');
       }
       setMuteModalOpen(false);
       setSelectedUserForMute(null);
       await loadUsers();
-    } catch (e) {
-      alert('Помилка при зміні обмеження на коментарі');
+    } catch (e: any) {
+      alert(`Помилка при зміні обмеження на коментарі: ${e?.message || 'Не вдалося зберегти'}`);
     }
   };
 
