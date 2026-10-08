@@ -23,9 +23,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Файл занадто великий. Максимальний розмір 5 МБ.');
+    // Check size limit (allow original files up to 15MB since we compress client-side)
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Файл занадто великий. Максимальний розмір 15 МБ.');
       return;
     }
 
@@ -40,8 +40,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const result = await storageService.uploadImage(file, folder);
       onChange(result.url);
-      setUploadMessage('✓ Фото успішно завантажено');
-      setTimeout(() => setUploadMessage(null), 3000);
+      
+      const stats = result.originalSizeKb && result.compressedSizeKb
+        ? ` (${result.originalSizeKb}КБ ➔ ${result.compressedSizeKb}КБ WebP)`
+        : '';
+      setUploadMessage(`✓ Фото оптимізовано${stats}`);
+      setTimeout(() => setUploadMessage(null), 4500);
     } catch (err: any) {
       console.error(err);
       alert(err?.message || 'Не вдалося завантажити фото');
