@@ -383,7 +383,7 @@ export const App: React.FC = () => {
           )}
 
           <a
-            href="https://lzippol.github.io/ReceptSite/"
+            href="https://lzippol.github.io/Smacolik/"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors border border-stone-200 dark:border-stone-700"
