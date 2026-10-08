@@ -207,9 +207,13 @@ export const App: React.FC = () => {
 
   const handleDeleteRecipe = async (id: string, title: string) => {
     if (window.confirm(`Ви дійсно бажаєте видалити рецепт "${title}"?`)) {
-      await recipeService.delete(id);
-      alert(`✓ Рецепт "${title}" видалено`);
-      loadData();
+      try {
+        await recipeService.delete(id);
+        alert(`✓ Рецепт "${title}" видалено`);
+        loadData();
+      } catch (err: any) {
+        alert(`Помилка видалення: ${err?.message || 'Невідома помилка'}`);
+      }
     }
   };
 

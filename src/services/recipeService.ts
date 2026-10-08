@@ -46,6 +46,8 @@ function mapDbToRecipe(row: any): Recipe {
     servings: row.servings,
     calories: row.calories,
     image: row.image,
+    seoTitle: row.seo_title ?? row.seoTitle,
+    seoDescription: row.seo_description ?? row.seoDescription,
     rating: row.rating !== undefined && row.rating !== null ? Number(row.rating) : 0,
     reviewsCount: row.reviews_count ?? row.reviewsCount ?? 0,
     dietary: row.dietary || {
@@ -228,6 +230,8 @@ class RecipeService implements IRecipeService {
           servings: newRecipe.servings,
           calories: newRecipe.calories,
           image: newRecipe.image,
+          seo_title: newRecipe.seoTitle || '',
+          seo_description: newRecipe.seoDescription || '',
           rating: newRecipe.rating,
           reviews_count: newRecipe.reviewsCount,
           dietary: newRecipe.dietary,
@@ -300,6 +304,9 @@ class RecipeService implements IRecipeService {
         if (updates.servings !== undefined) dbUpdates.servings = updates.servings;
         if (updates.calories !== undefined) dbUpdates.calories = updates.calories;
         if (updates.image !== undefined) dbUpdates.image = updates.image;
+        if (updates.seoTitle !== undefined) dbUpdates.seo_title = updates.seoTitle;
+        if (updates.seoDescription !== undefined) dbUpdates.seo_description = updates.seoDescription;
+        if (updates.nutrition !== undefined) dbUpdates.nutrition = updates.nutrition;
         if (updates.rating !== undefined) dbUpdates.rating = updates.rating;
         if (updates.reviewsCount !== undefined) dbUpdates.reviews_count = updates.reviewsCount;
         if (updates.dietary !== undefined) dbUpdates.dietary = updates.dietary;
@@ -333,14 +340,10 @@ class RecipeService implements IRecipeService {
 
   async delete(id: string): Promise<boolean> {
     if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.from('recipes').delete().eq('id', id);
-        if (!error) {
-          this.cache = null;
-          return true;
-        }
-      } catch (err) {
-        console.warn('Supabase delete failed:', err);
+      const { error } = await supabase.from('recipes').delete().eq('id', id);
+      if (error) {
+        console.error('Supabase delete failed:', error);
+        throw new Error(`Не вдалося видалити рецепт із бази даних: ${error.message}`);
       }
     }
 
