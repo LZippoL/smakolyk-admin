@@ -24,6 +24,14 @@ export interface IRecipeService {
 
 // Convert database snake_case to frontend Recipe camelCase
 function mapDbToRecipe(row: any): Recipe {
+  const isDraft = Boolean(
+    row.is_draft ?? 
+    row.isDraft ?? 
+    row.author?.isDraft ?? 
+    (row.status === 'draft' || row.author?.status === 'draft')
+  );
+  const status: 'published' | 'draft' = isDraft ? 'draft' : 'published';
+
   return {
     id: row.id,
     slug: row.slug,
@@ -55,6 +63,8 @@ function mapDbToRecipe(row: any): Recipe {
     featured: row.featured,
     budget: row.budget,
     quick20: row.quick20,
+    status,
+    isDraft,
     createdAt: row.created_at || row.createdAt,
     updatedAt: row.updated_at || row.updatedAt
   };
@@ -181,9 +191,21 @@ class RecipeService implements IRecipeService {
   async create(recipeData: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'rating' | 'reviewsCount'>): Promise<Recipe> {
     const now = new Date().toISOString();
     const id = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const isDraft = Boolean(recipeData.isDraft || recipeData.status === 'draft');
+    const status: 'published' | 'draft' = isDraft ? 'draft' : 'published';
+
+    const authorWithStatus = {
+      ...(recipeData.author || { name: 'Шеф-редактор' }),
+      status,
+      isDraft
+    };
+
     const newRecipe: Recipe = {
       ...recipeData,
       id,
+      status,
+      isDraft,
+      author: authorWithStatus,
       createdAt: now,
       updatedAt: now,
       rating: 5.0,
@@ -212,7 +234,7 @@ class RecipeService implements IRecipeService {
           ingredients: newRecipe.ingredients,
           instructions: newRecipe.instructions,
           tags: newRecipe.tags,
-          author: newRecipe.author,
+          author: authorWithStatus,
           nutrition: newRecipe.nutrition || null,
           created_at: newRecipe.createdAt,
           updated_at: newRecipe.updatedAt
@@ -241,16 +263,31 @@ class RecipeService implements IRecipeService {
       throw new Error(`Recipe with ID ${id} not found`);
     }
 
+    const updatedStatus = updates.status !== undefined 
+      ? updates.status 
+      : (updates.isDraft !== undefined ? (updates.isDraft ? 'draft' : 'published') : (existing.status || (existing.isDraft ? 'draft' : 'published')));
+    const updatedIsDraft = updatedStatus === 'draft';
+
+    const authorWithStatus = {
+      ...(updates.author || existing.author || { name: 'Шеф-редактор' }),
+      status: updatedStatus,
+      isDraft: updatedIsDraft
+    };
+
     const updatedRecipe: Recipe = {
       ...existing,
       ...updates,
+      status: updatedStatus,
+      isDraft: updatedIsDraft,
+      author: authorWithStatus,
       updatedAt: new Date().toISOString()
     };
 
     if (isSupabaseConfigured) {
       try {
         const dbUpdates: any = {
-          updated_at: updatedRecipe.updatedAt
+          updated_at: updatedRecipe.updatedAt,
+          author: authorWithStatus
         };
         if (updates.title !== undefined) dbUpdates.title = updates.title;
         if (updates.description !== undefined) dbUpdates.description = updates.description;

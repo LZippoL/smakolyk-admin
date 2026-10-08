@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Article } from '../types';
+import { Article, ContentStatus } from '../types';
 import { Button } from './Button';
 import { Input } from './Input';
 import { RichTextEditor } from './editor/RichTextEditor';
@@ -26,6 +26,7 @@ export const AdminArticleForm: React.FC<AdminArticleFormProps> = ({
   const [image, setImage] = useState(initialArticle?.image || 'https://images.unsplash.com/photo-1516714435131-44d6b64dc6a2?auto=format&fit=crop&w=1000&q=80');
   const [readTime, setReadTime] = useState(initialArticle?.readTime || 5);
   const [tagsInput, setTagsInput] = useState(initialArticle?.tags?.join(', ') || 'кулінарія, поради');
+  const [status, setStatus] = useState<ContentStatus>(initialArticle?.status || (initialArticle?.isDraft ? 'draft' : 'published'));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const generateSlug = (text: string) => {
@@ -51,22 +52,39 @@ export const AdminArticleForm: React.FC<AdminArticleFormProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !slug.trim()) return;
+  const handleSubmit = async (e?: React.FormEvent, targetStatus?: ContentStatus) => {
+    if (e) e.preventDefault();
+    const finalStatus = targetStatus || status;
+    const isSavingDraft = finalStatus === 'draft';
+
+    const finalTitle = title.trim();
+    if (!finalTitle) {
+      alert('Будь ласка, вкажіть заголовок статті');
+      return;
+    }
+
+    let finalSlug = slug.trim();
+    if (!finalSlug) {
+      finalSlug = generateSlug(finalTitle) || `article-${Date.now()}`;
+      setSlug(finalSlug);
+    }
 
     setIsSubmitting(true);
     try {
       const parsedTags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+      setStatus(finalStatus);
+
       await onSubmit({
-        title: title.trim(),
-        slug: slug.trim(),
+        title: finalTitle,
+        slug: finalSlug,
         summary: summary.trim(),
         content: content.trim(),
         category,
         image: image.trim(),
-        readTime: Number(readTime),
+        readTime: Number(readTime) || 1,
         tags: parsedTags,
+        status: finalStatus,
+        isDraft: isSavingDraft,
         author: initialArticle?.author || { name: 'Шеф-редактор', role: 'Кулінарний експерт' }
       });
     } finally {
@@ -75,14 +93,52 @@ export const AdminArticleForm: React.FC<AdminArticleFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-stone-900 p-6 sm:p-10 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-xl max-w-4xl mx-auto">
-      <div>
-        <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
-          {isEditing ? 'Редагувати статтю' : 'Написати нову статтю'}
-        </h2>
-        <p className="text-sm text-stone-500 mt-1">
-          Створюйте цікаві кулінарні посібники, огляди та поради з форматуванням тексту і фотографіями.
-        </p>
+    <form onSubmit={(e) => handleSubmit(e)} className="space-y-6 bg-white dark:bg-stone-900 p-6 sm:p-10 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-xl max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200 dark:border-stone-800">
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
+              {isEditing ? 'Редагувати статтю' : 'Написати нову статтю'}
+            </h2>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold ${
+              status === 'draft'
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800'
+                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800'
+            }`}>
+              {status === 'draft' ? '📝 Чернетка' : '🟢 Опубліковано'}
+            </span>
+          </div>
+          <p className="text-sm text-stone-500 mt-1">
+            Створюйте цікаві кулінарні посібники, огляди та поради з форматуванням тексту і фотографіями.
+          </p>
+        </div>
+
+        <div className="inline-flex items-center p-1 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 self-start sm:self-center shrink-0">
+          <button
+            type="button"
+            onClick={() => setStatus('published')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              status === 'published'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
+            }`}
+          >
+            <span>🟢</span>
+            <span>Опубліковано</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatus('draft')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              status === 'draft'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
+            }`}
+          >
+            <span>📝</span>
+            <span>Чернетка</span>
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -177,21 +233,40 @@ export const AdminArticleForm: React.FC<AdminArticleFormProps> = ({
         />
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-stone-200 dark:border-stone-800">
         <Button
           type="button"
-          variant="secondary"
+          variant="ghost"
           onClick={onCancel}
+          className="rounded-2xl"
         >
           Скасувати
         </Button>
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          className="px-8"
-        >
-          {isEditing ? 'Зберегти статтю' : 'Опублікувати статтю'}
-        </Button>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            isLoading={isSubmitting && status === 'draft'}
+            disabled={isSubmitting}
+            onClick={() => handleSubmit(undefined, 'draft')}
+            className="rounded-2xl border-amber-300 dark:border-amber-700/80 text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 font-bold"
+            title="Зберегти статтю у чернетки без публікації на сайті"
+          >
+            📝 Зберегти як чернетку
+          </Button>
+
+          <Button
+            type="button"
+            isLoading={isSubmitting && status === 'published'}
+            disabled={isSubmitting}
+            onClick={() => handleSubmit(undefined, 'published')}
+            className="rounded-2xl px-8 shadow-md shadow-brand-500/20 bg-brand-600 hover:bg-brand-500 text-white font-bold"
+            title="Опублікувати статтю на сайті"
+          >
+            🚀 {isEditing && initialArticle?.status === 'published' ? 'Зберегти зміни' : 'Опублікувати статтю'}
+          </Button>
+        </div>
       </div>
     </form>
   );

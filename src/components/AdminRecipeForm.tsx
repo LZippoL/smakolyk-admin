@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Clock, Sparkles, Copy, Check } from 'lucide-react';
-import { Recipe, RecipeIngredient, CookingStep, RecipeCategory, CuisineType, Difficulty } from '../types';
+import { Recipe, RecipeIngredient, CookingStep, RecipeCategory, CuisineType, Difficulty, ContentStatus } from '../types';
 import { CATEGORIES, CUISINES } from '../data/categories';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -33,6 +33,7 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
   const [difficulty, setDifficulty] = useState<Difficulty>(initialRecipe?.difficulty || 'easy');
   const [calories, setCalories] = useState<number>(initialRecipe?.calories || 320);
   const [tagsInput, setTagsInput] = useState(initialRecipe?.tags?.join(', ') || 'домашнє, смачно');
+  const [status, setStatus] = useState<ContentStatus>(initialRecipe?.status || (initialRecipe?.isDraft ? 'draft' : 'published'));
 
   // Nutrition
   const [protein, setProtein] = useState<number>(initialRecipe?.nutrition?.protein || 18);
@@ -192,9 +193,22 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
     setInstructions(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !slug.trim()) return;
+  const handleSubmit = async (e?: React.FormEvent, targetStatus?: ContentStatus) => {
+    if (e) e.preventDefault();
+    const finalStatus = targetStatus || status;
+    const isSavingDraft = finalStatus === 'draft';
+
+    const finalTitle = title.trim();
+    if (!finalTitle) {
+      alert('Будь ласка, вкажіть назву страви');
+      return;
+    }
+
+    let finalSlug = slug.trim();
+    if (!finalSlug) {
+      finalSlug = generateSlug(finalTitle) || `recipe-${Date.now()}`;
+      setSlug(finalSlug);
+    }
 
     setIsSubmitting(true);
     try {
@@ -206,30 +220,38 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
         .map(t => t.trim())
         .filter(Boolean);
 
+      setStatus(finalStatus);
+
       await onSubmit({
-        title: title.trim(),
-        slug: slug.trim(),
+        title: finalTitle,
+        slug: finalSlug,
         description: description.trim(),
         image: image.trim(),
         category,
         cuisine,
-        prepTime: Number(prepTime),
-        cookTime: Number(cookTime),
-        totalTime: Number(prepTime) + Number(cookTime),
-        servings: Number(servings),
+        prepTime: Number(prepTime) || 0,
+        cookTime: Number(cookTime) || 0,
+        totalTime: (Number(prepTime) || 0) + (Number(cookTime) || 0),
+        servings: Number(servings) || 1,
         difficulty,
-        calories: Number(calories),
+        calories: Number(calories) || 0,
         nutrition: {
-          protein: Number(protein),
-          fat: Number(fat),
-          carbs: Number(carbs),
-          calories: Number(calories)
+          protein: Number(protein) || 0,
+          fat: Number(fat) || 0,
+          carbs: Number(carbs) || 0,
+          calories: Number(calories) || 0
         },
         tags: parsedTags,
         ingredients: validIngredients,
         instructions: validInstructions,
-        author: initialRecipe?.author || { name: 'Шеф-редактор', role: 'Автор рецепту' },
-        seoTitle: seoTitle.trim() || `${title.trim()} — покроковий рецепт`,
+        status: finalStatus,
+        isDraft: isSavingDraft,
+        author: {
+          ...(initialRecipe?.author || { name: 'Шеф-редактор', role: 'Автор рецепту' }),
+          status: finalStatus,
+          isDraft: isSavingDraft
+        },
+        seoTitle: seoTitle.trim() || `${finalTitle} — покроковий рецепт`,
         seoDescription: seoDescription.trim() || description.trim()
       });
     } finally {
@@ -238,18 +260,56 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 bg-white dark:bg-stone-900 p-6 sm:p-10 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-xl max-w-4xl mx-auto">
+    <form onSubmit={(e) => handleSubmit(e)} className="space-y-8 bg-white dark:bg-stone-900 p-6 sm:p-10 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-xl max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
-            {isEditing ? 'Редагувати рецепт' : 'Створити новий рецепт'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100">
+              {isEditing ? 'Редагувати рецепт' : 'Створити новий рецепт'}
+            </h2>
+            {/* Status indicator badge */}
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold ${
+              status === 'draft'
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800'
+                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800'
+            }`}>
+              {status === 'draft' ? '📝 Чернетка' : '🟢 Опубліковано'}
+            </span>
+          </div>
           <p className="text-sm text-stone-500 mt-1">
-            Заповніть форму вручну або скористайтеся миттєвим імпортом із ChatGPT.
+            Заповніть форму вручну, збережіть як чернетку або імпортуйте з ChatGPT.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-center shrink-0">
+          {/* Status selector buttons */}
+          <div className="inline-flex items-center p-1 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+            <button
+              type="button"
+              onClick={() => setStatus('published')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                status === 'published'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
+              }`}
+            >
+              <span>🟢</span>
+              <span>Опубліковано</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus('draft')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                status === 'draft'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
+              }`}
+            >
+              <span>📝</span>
+              <span>Чернетка</span>
+            </button>
+          </div>
+
           <Button
             type="button"
             variant="outline"
@@ -649,21 +709,40 @@ export const AdminRecipeForm: React.FC<AdminRecipeFormProps> = ({
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-stone-200 dark:border-stone-800">
         <Button
           type="button"
-          variant="secondary"
+          variant="ghost"
           onClick={onCancel}
+          className="rounded-2xl"
         >
           Скасувати
         </Button>
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          className="px-8 shadow-md shadow-brand-500/20"
-        >
-          {isEditing ? 'Зберегти зміни' : 'Опублікувати рецепт'}
-        </Button>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            isLoading={isSubmitting && status === 'draft'}
+            disabled={isSubmitting}
+            onClick={() => handleSubmit(undefined, 'draft')}
+            className="rounded-2xl border-amber-300 dark:border-amber-700/80 text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 font-bold"
+            title="Зберегти поточний прогрес у чернетки без публікації на сайті"
+          >
+            📝 Зберегти як чернетку
+          </Button>
+
+          <Button
+            type="button"
+            isLoading={isSubmitting && status === 'published'}
+            disabled={isSubmitting}
+            onClick={() => handleSubmit(undefined, 'published')}
+            className="rounded-2xl px-8 shadow-md shadow-brand-500/20 bg-brand-600 hover:bg-brand-500 text-white font-bold"
+            title="Опублікувати рецепт у відкритий каталог"
+          >
+            🚀 {isEditing && initialRecipe?.status === 'published' ? 'Зберегти зміни' : 'Опублікувати рецепт'}
+          </Button>
+        </div>
       </div>
 
       <JsonRecipeImportModal

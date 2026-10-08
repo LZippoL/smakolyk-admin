@@ -52,6 +52,8 @@ export interface CookingStep {
   image?: string;
 }
 
+export type ContentStatus = 'published' | 'draft';
+
 export interface Recipe {
   id: string;
   slug: string;
@@ -82,6 +84,8 @@ export interface Recipe {
     name: string;
     avatar?: string;
     role?: string;
+    status?: ContentStatus;
+    isDraft?: boolean;
   };
   createdAt: string;
   updatedAt: string;
@@ -91,6 +95,8 @@ export interface Recipe {
   season?: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   seoTitle?: string;
   seoDescription?: string;
+  status?: ContentStatus;
+  isDraft?: boolean;
 }
 
 export interface Article {
@@ -110,6 +116,8 @@ export interface Article {
   createdAt: string;
   tags: string[];
   relatedRecipeSlugs?: string[];
+  status?: ContentStatus;
+  isDraft?: boolean;
 }
 
 export interface Review {

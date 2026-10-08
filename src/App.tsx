@@ -46,6 +46,8 @@ export const App: React.FC = () => {
   const [usersCount, setUsersCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [recipeStatusFilter, setRecipeStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [articleStatusFilter, setArticleStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   // Mode: list, create_recipe, edit_recipe, create_article, edit_article
   const [mode, setMode] = useState<'list' | 'create_recipe' | 'edit_recipe' | 'create_article' | 'edit_article'>('list');
@@ -187,12 +189,13 @@ export const App: React.FC = () => {
   // Recipe actions
   const handleSaveRecipe = async (data: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'rating' | 'reviewsCount'>) => {
     try {
+      const isDraft = data.status === 'draft' || data.isDraft;
       if (mode === 'edit_recipe' && selectedRecipe) {
         await recipeService.update(selectedRecipe.id, data);
-        alert(`✓ Рецепт "${data.title}" успішно оновлено!`);
+        alert(isDraft ? `📝 Рецепт збережено як чернетку!` : `✓ Рецепт "${data.title}" успішно опубліковано/оновлено!`);
       } else {
         await recipeService.create(data);
-        alert(`✓ Рецепт "${data.title}" успішно створено!`);
+        alert(isDraft ? `📝 Рецепт збережено як чернетку!` : `🚀 Рецепт "${data.title}" успішно опубліковано!`);
       }
       setMode('list');
       setSelectedRecipe(null);
@@ -213,12 +216,13 @@ export const App: React.FC = () => {
   // Article actions
   const handleSaveArticle = async (data: Omit<Article, 'id' | 'createdAt'>) => {
     try {
+      const isDraft = data.status === 'draft' || data.isDraft;
       if (mode === 'edit_article' && selectedArticle) {
         await articleService.update(selectedArticle.id, data);
-        alert(`✓ Статтю "${data.title}" успішно оновлено!`);
+        alert(isDraft ? `📝 Статтю збережено як чернетку!` : `✓ Статтю "${data.title}" успішно опубліковано/оновлено!`);
       } else {
         await articleService.create(data);
-        alert(`✓ Статтю "${data.title}" успішно створено!`);
+        alert(isDraft ? `📝 Статтю збережено як чернетку!` : `🚀 Статтю "${data.title}" успішно опубліковано!`);
       }
       setMode('list');
       setSelectedArticle(null);
@@ -266,7 +270,7 @@ export const App: React.FC = () => {
     );
   }
 
-  // Filter recipes by search query and category
+  // Filter recipes by search query, category, and draft status
   const filteredRecipes = recipes.filter(r => {
     const matchesSearch = 
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -275,13 +279,28 @@ export const App: React.FC = () => {
 
     const matchesCategory = selectedCategory === 'all' || r.category === selectedCategory;
 
-    return matchesSearch && matchesCategory;
+    const isDraft = r.status === 'draft' || r.isDraft;
+    const matchesStatus =
+      recipeStatusFilter === 'all' ||
+      (recipeStatusFilter === 'draft' && isDraft) ||
+      (recipeStatusFilter === 'published' && !isDraft);
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const filteredArticles = articles.filter(a =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredArticles = articles.filter(a => {
+    const matchesSearch =
+      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const isDraft = a.status === 'draft' || a.isDraft;
+    const matchesStatus =
+      articleStatusFilter === 'all' ||
+      (articleStatusFilter === 'draft' && isDraft) ||
+      (articleStatusFilter === 'published' && !isDraft);
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handlePurgeCache = async () => {
     if ('serviceWorker' in navigator) {
@@ -580,9 +599,48 @@ export const App: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-stone-500">
-                      <Filter className="w-3.5 h-3.5" />
-                      <span>Знайдено: <strong>{filteredRecipes.length}</strong> з {recipes.length}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Status Filter (All / Published / Draft) */}
+                      <div className="inline-flex p-1 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+                        <button
+                          type="button"
+                          onClick={() => setRecipeStatusFilter('all')}
+                          className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                            recipeStatusFilter === 'all'
+                              ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
+                              : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                          }`}
+                        >
+                          Всі ({recipes.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRecipeStatusFilter('published')}
+                          className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                            recipeStatusFilter === 'published'
+                              ? 'bg-emerald-500 text-white shadow-sm'
+                              : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                          }`}
+                        >
+                          🟢 Опубліковані ({recipes.filter(r => !r.isDraft && r.status !== 'draft').length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRecipeStatusFilter('draft')}
+                          className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                            recipeStatusFilter === 'draft'
+                              ? 'bg-amber-500 text-white shadow-sm'
+                              : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                          }`}
+                        >
+                          📝 Чернетки ({recipes.filter(r => r.isDraft || r.status === 'draft').length})
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-stone-500 pl-1">
+                        <Filter className="w-3.5 h-3.5" />
+                        <span>Знайдено: <strong>{filteredRecipes.length}</strong> з {recipes.length}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -641,6 +699,7 @@ export const App: React.FC = () => {
                         {filteredRecipes.length > 0 ? (
                           filteredRecipes.map(recipe => {
                             const catMeta = CATEGORIES.find(c => c.id === recipe.category);
+                            const isDraft = recipe.status === 'draft' || recipe.isDraft;
                             return (
                               <tr key={recipe.id} className="hover:bg-stone-50/80 dark:hover:bg-stone-800/40 transition-colors">
                                 <td className="p-4">
@@ -651,9 +710,16 @@ export const App: React.FC = () => {
                                       className="w-12 h-12 rounded-xl object-cover shrink-0 border border-stone-200 dark:border-stone-800"
                                     />
                                     <div>
-                                      <p className="font-bold text-stone-900 dark:text-stone-100 line-clamp-1">
-                                        {recipe.title}
-                                      </p>
+                                      <div className="flex items-center gap-2">
+                                        <p className="font-bold text-stone-900 dark:text-stone-100 line-clamp-1">
+                                          {recipe.title}
+                                        </p>
+                                        {isDraft && (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shrink-0">
+                                            📝 Чернетка
+                                          </span>
+                                        )}
+                                      </div>
                                       <p className="text-xs text-stone-400 font-mono">
                                         /{recipe.slug}
                                       </p>
@@ -724,15 +790,61 @@ export const App: React.FC = () => {
             {/* Articles List Table */}
             {activeTab === 'articles' && (
               <div className="space-y-4">
-                <div className="relative max-w-sm">
-                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Пошук статей за назвою або категорією..."
-                    className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl outline-none"
-                  />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-stone-900 p-4 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-sm">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Пошук статей за назвою або категорією..."
+                      className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Status Filter (All / Published / Draft) */}
+                    <div className="inline-flex p-1 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+                      <button
+                        type="button"
+                        onClick={() => setArticleStatusFilter('all')}
+                        className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                          articleStatusFilter === 'all'
+                            ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
+                            : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                        }`}
+                      >
+                        Всі ({articles.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setArticleStatusFilter('published')}
+                        className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                          articleStatusFilter === 'published'
+                            ? 'bg-emerald-500 text-white shadow-sm'
+                            : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                        }`}
+                      >
+                        🟢 Опубліковані ({articles.filter(a => !a.isDraft && a.status !== 'draft').length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setArticleStatusFilter('draft')}
+                        className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                          articleStatusFilter === 'draft'
+                            ? 'bg-amber-500 text-white shadow-sm'
+                            : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                        }`}
+                      >
+                        📝 Чернетки ({articles.filter(a => a.isDraft || a.status === 'draft').length})
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-stone-500 pl-1">
+                      <Filter className="w-3.5 h-3.5" />
+                      <span>Знайдено: <strong>{filteredArticles.length}</strong> з {articles.length}</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden shadow-card">
@@ -748,7 +860,9 @@ export const App: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                         {filteredArticles.length > 0 ? (
-                          filteredArticles.map(article => (
+                          filteredArticles.map(article => {
+                            const isDraft = article.status === 'draft' || article.isDraft;
+                            return (
                             <tr key={article.id} className="hover:bg-stone-50/80 dark:hover:bg-stone-800/40 transition-colors">
                               <td className="p-4">
                                 <div className="flex items-center gap-3">
@@ -758,9 +872,16 @@ export const App: React.FC = () => {
                                     className="w-12 h-12 rounded-xl object-cover shrink-0 border border-stone-200 dark:border-stone-800"
                                   />
                                   <div>
-                                    <p className="font-bold text-stone-900 dark:text-stone-100 line-clamp-1">
-                                      {article.title}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-bold text-stone-900 dark:text-stone-100 line-clamp-1">
+                                        {article.title}
+                                      </p>
+                                      {isDraft && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shrink-0">
+                                          📝 Чернетка
+                                        </span>
+                                      )}
+                                    </div>
                                     <p className="text-xs text-stone-400 font-mono">
                                       /{article.slug}
                                     </p>
@@ -797,7 +918,8 @@ export const App: React.FC = () => {
                                 </div>
                               </td>
                             </tr>
-                          ))
+                          );
+                        })
                         ) : (
                           <tr>
                             <td colSpan={4} className="text-center py-10 text-stone-500 text-sm">
