@@ -6,3 +6,5 @@ dist-ssr
 *.log
 .env
 .env.*
+/output/
+/.wrangler/

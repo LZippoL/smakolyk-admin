@@ -3,5 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/smakolyk-admin/'
+  base: '/',
+  build: {
+    outDir: 'output/cloudflare/build'
+  }
 });

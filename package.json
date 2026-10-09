@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "tsc && vite build && git -C dist add -A && git -C dist commit -m \"Deploy Admin to GitHub Pages\" && git -C dist push -f origin gh-pages"
+    "test:hosting": "node --test tests/hosting.test.mjs",
+    "deploy": "npm run build && npm run test:hosting && wrangler pages deploy --project-name culinorium-admin --branch main"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
@@ -24,9 +25,11 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "jose": "6.2.12",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.6.3",
-    "vite": "^6.0.1"
+    "vite": "^6.0.1",
+    "wrangler": "4.149.0"
   }
 }

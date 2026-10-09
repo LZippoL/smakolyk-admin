@@ -151,7 +151,7 @@ export const App: React.FC = () => {
     if (perm === 'granted') {
       new Notification('🔔 Сповіщення активовано!', {
         body: 'Тепер ви отримуватимете повідомлення при кожному новому відгуку на страву.',
-        icon: '/smakolyk-admin/icon-192.png'
+        icon: '/icon-192.png'
       });
     }
   };
@@ -183,8 +183,8 @@ export const App: React.FC = () => {
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification('🍳 Новий відгук на страву!', {
                   body: `${newRow.user_name || 'Користувач'} (★ ${newRow.rating || 5}): "${newRow.comment?.substring(0, 80) || ''}"`,
-                  icon: '/smakolyk-admin/icon-192.png',
-                  badge: '/smakolyk-admin/icon-192.png',
+                  icon: '/icon-192.png',
+                  badge: '/icon-192.png',
                   tag: `review-${newRow.id}`
                 });
               }
@@ -208,6 +208,9 @@ export const App: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
+    if (window.location.hostname === 'admin.culinorium.com') {
+      window.location.assign('/cdn-cgi/access/logout');
+    }
   };
 
   // Recipe actions
@@ -422,7 +425,7 @@ export const App: React.FC = () => {
           )}
 
           <a
-            href="https://lzippol.github.io/Smacolik/"
+            href="https://culinorium.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors border border-stone-200 dark:border-stone-700"
