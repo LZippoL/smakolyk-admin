@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase } from './supabaseClient';
 import { storage } from './storageService';
 
 export interface UserProfileRecord {
@@ -17,8 +17,8 @@ export interface UserProfileRecord {
   mutedAt?: string;
 }
 
-const STORAGE_KEY = 'smakolyk_users_db';
-const SYSTEM_STORE_ID = '__SYSTEM_USERS__';
+// Remove the legacy cache that contained other users' emails.
+void storage.remove('smakolyk_users_db');
 
 export function generateFriendlyId(uuid: string): string {
   if (!uuid) return 'UID-00000000';
@@ -33,217 +33,39 @@ export function isUserMutedActive(user: UserProfileRecord | null | undefined): b
   return expiry > Date.now();
 }
 
-class UserService {
-  private memoryCache: UserProfileRecord[] | null = null;
-  private lastFetch = 0;
-  private readonly CACHE_TTL = 5_000; // 5 seconds
-
-  async getAll(forceFresh = true): Promise<UserProfileRecord[]> {
-    if (!forceFresh && this.memoryCache && Date.now() - this.lastFetch < this.CACHE_TTL) {
-      return this.memoryCache;
-    }
-
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase
-          .from('recipes')
-          .select('description')
-          .eq('id', SYSTEM_STORE_ID)
-          .maybeSingle();
-
-        if (!error && data?.description) {
-          try {
-            const parsed = JSON.parse(data.description) as UserProfileRecord[];
-            if (Array.isArray(parsed)) {
-              this.memoryCache = parsed;
-              this.lastFetch = Date.now();
-              await storage.set(STORAGE_KEY, parsed);
-              return parsed;
-            }
-          } catch (e) {
-            console.warn('Failed to parse users JSON from DB:', e);
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase fetch users failed:', err);
-      }
-    }
-
-    const local = await storage.get<UserProfileRecord[]>(STORAGE_KEY, []);
-    this.memoryCache = local;
-    return local;
-  }
-
-  async getById(idOrFriendlyIdOrEmail: string): Promise<UserProfileRecord | null> {
-    if (!idOrFriendlyIdOrEmail) return null;
-    const users = await this.getAll(true);
-    const query = idOrFriendlyIdOrEmail.toLowerCase().trim();
-    return (
-      users.find(
-        (u) =>
-          u.id.toLowerCase() === query ||
-          u.friendlyId.toLowerCase() === query ||
-          u.email.toLowerCase() === query
-      ) || null
-    );
-  }
-
-  async saveAll(users: UserProfileRecord[]): Promise<void> {
-    this.memoryCache = users;
-    this.lastFetch = Date.now();
-    await storage.set(STORAGE_KEY, users);
-
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('recipes')
-        .update({ description: JSON.stringify(users) })
-        .eq('id', SYSTEM_STORE_ID);
-
-      if (error) {
-        // If row doesn't exist, try upsert
-        const upsertRes = await supabase
-          .from('recipes')
-          .upsert({
-            id: SYSTEM_STORE_ID,
-            slug: '__system_users__',
-            title: 'System Users Store',
-            description: JSON.stringify(users),
-            category: 'system',
-            cuisine: 'system',
-            difficulty: 'easy',
-            prep_time: 0,
-            cook_time: 0,
-            total_time: 0,
-            servings: 1,
-            calories: 0,
-            image: '',
-            rating: 0,
-            reviews_count: 0,
-            dietary: {},
-            ingredients: [],
-            instructions: [],
-            tags: ['system'],
-            author: { name: 'system' }
-          });
-
-        if (upsertRes.error) {
-          console.error('Failed to sync users to Supabase:', upsertRes.error);
-          throw new Error(upsertRes.error.message);
-        }
-      }
-    }
-  }
-
-  async banUser(userId: string, reason?: string): Promise<UserProfileRecord> {
-    const users = await this.getAll(true);
-    const query = userId.toLowerCase().trim();
-    const idx = users.findIndex(
-      (u) =>
-        u.id.toLowerCase() === query ||
-        u.friendlyId.toLowerCase() === query ||
-        u.email.toLowerCase() === query
-    );
-    if (idx === -1) throw new Error('Користувача не знайдено');
-
-    users[idx] = {
-      ...users[idx],
-      isBanned: true,
-      banReason: reason?.trim() || 'Порушення правил спільноти',
-      bannedAt: new Date().toISOString(),
-    };
-    await this.saveAll(users);
-    return users[idx];
-  }
-
-  async unbanUser(userId: string): Promise<UserProfileRecord> {
-    const users = await this.getAll(true);
-    const query = userId.toLowerCase().trim();
-    const idx = users.findIndex(
-      (u) =>
-        u.id.toLowerCase() === query ||
-        u.friendlyId.toLowerCase() === query ||
-        u.email.toLowerCase() === query
-    );
-    if (idx === -1) throw new Error('Користувача не знайдено');
-
-    users[idx] = {
-      ...users[idx],
-      isBanned: false,
-      banReason: undefined,
-      bannedAt: undefined,
-    };
-    await this.saveAll(users);
-    return users[idx];
-  }
-
-  async muteUser(
-    userId: string,
-    durationDays: number = 7,
-    reason?: string
-  ): Promise<UserProfileRecord> {
-    const users = await this.getAll(true);
-    const query = userId.toLowerCase().trim();
-    const idx = users.findIndex(
-      (u) =>
-        u.id.toLowerCase() === query ||
-        u.friendlyId.toLowerCase() === query ||
-        u.email.toLowerCase() === query
-    );
-    if (idx === -1) throw new Error('Користувача не знайдено');
-
-    let mutedUntil: string;
-    if (durationDays <= 0) {
-      mutedUntil = 'permanent';
-    } else {
-      const expiry = new Date();
-      expiry.setDate(expiry.getDate() + durationDays);
-      mutedUntil = expiry.toISOString();
-    }
-
-    users[idx] = {
-      ...users[idx],
-      isMuted: true,
-      muteReason: reason?.trim() || 'Тимчасове обмеження публікації відгуків',
-      mutedUntil,
-      mutedAt: new Date().toISOString(),
-    };
-    await this.saveAll(users);
-    return users[idx];
-  }
-
-  async unmuteUser(userId: string): Promise<UserProfileRecord> {
-    const users = await this.getAll(true);
-    const query = userId.toLowerCase().trim();
-    const idx = users.findIndex(
-      (u) =>
-        u.id.toLowerCase() === query ||
-        u.friendlyId.toLowerCase() === query ||
-        u.email.toLowerCase() === query
-    );
-    if (idx === -1) throw new Error('Користувача не знайдено');
-
-    users[idx] = {
-      ...users[idx],
-      isMuted: false,
-      muteReason: undefined,
-      mutedUntil: undefined,
-      mutedAt: undefined,
-    };
-    await this.saveAll(users);
-    return users[idx];
-  }
-
-  async deleteUser(userId: string): Promise<void> {
-    const users = await this.getAll(true);
-    const query = userId.toLowerCase().trim();
-    const filtered = users.filter(
-      (u) =>
-        u.id.toLowerCase() !== query &&
-        u.friendlyId.toLowerCase() !== query &&
-        u.email.toLowerCase() !== query
-    );
-    await this.saveAll(filtered);
-  }
+function mapProfile(row: any): UserProfileRecord {
+  return { id: row.id, friendlyId: generateFriendlyId(row.id), email: row.email,
+    displayName: row.display_name, createdAt: row.created_at, lastLoginAt: row.last_login_at,
+    isBanned: row.is_banned || row.is_deleted, banReason: row.ban_reason || undefined,
+    bannedAt: row.banned_at || undefined, isMuted: row.is_muted,
+    muteReason: row.mute_reason || undefined,
+    mutedUntil: row.is_muted ? (row.muted_until || 'permanent') : undefined,
+    mutedAt: row.muted_at || undefined };
 }
 
+class UserService {
+  async getAll(_forceFresh = true): Promise<UserProfileRecord[]> {
+    const { data, error } = await supabase.from('user_profiles').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
+    if (error) throw new Error('Немає доступу до профілів');
+    return (data || []).map(mapProfile);
+  }
+  private async moderate(id: string, updates: Record<string, unknown>): Promise<UserProfileRecord> {
+    const { data, error } = await supabase.from('user_profiles').update(updates).eq('id', id).select().single();
+    if (error) throw new Error('Не вдалося змінити обмеження користувача');
+    return mapProfile(data);
+  }
+  banUser(id: string, reason?: string) {
+    return this.moderate(id, { is_banned: true, ban_reason: reason?.trim() || 'Порушення правил спільноти', banned_at: new Date().toISOString() });
+  }
+  unbanUser(id: string) {
+    return this.moderate(id, { is_banned: false, ban_reason: null, banned_at: null });
+  }
+  muteUser(id: string, durationDays = 7, reason?: string) {
+    const until = durationDays > 0 ? new Date(Date.now() + durationDays * 86400000).toISOString() : null;
+    return this.moderate(id, { is_muted: true, muted_until: until, mute_reason: reason?.trim() || 'Обмеження публікації відгуків', muted_at: new Date().toISOString() });
+  }
+  unmuteUser(id: string) {
+    return this.moderate(id, { is_muted: false, muted_until: null, mute_reason: null, muted_at: null });
+  }
+}
 export const userService = new UserService();

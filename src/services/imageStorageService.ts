@@ -82,6 +82,11 @@ export const storageService = {
       throw new Error('Supabase is not configured');
     }
 
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Увійдіть, щоб завантажити фото');
+    const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif' };
+    if (!extensions[file.type]) throw new Error('Оберіть зображення JPEG, PNG, WebP, AVIF або GIF');
+
     const originalSizeKb = Math.round(file.size / 1024);
 
     // Compress client-side to WebP (max 1280px, quality 82%)
@@ -94,15 +99,16 @@ export const storageService = {
     } catch (compressionErr) {
       console.warn('Image compression fallback to original:', compressionErr);
       uploadBlob = file;
-      fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      contentType = file.type || 'image/jpeg';
+      contentType = file.type;
     }
 
     const compressedSizeKb = Math.round(uploadBlob.size / 1024);
 
-    // Generate safe unique filename
-    const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `${folder}/${cleanFileName}`;
+    contentType = uploadBlob.type || contentType;
+    fileExt = extensions[contentType];
+    if (!fileExt || uploadBlob.size > 5 * 1024 * 1024) throw new Error('Зображення має бути до 5 МБ у дозволеному форматі');
+    const cleanFileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = folder === 'reviews' ? `reviews/${user.id}/${cleanFileName}` : `${folder}/${cleanFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('recipe-images')

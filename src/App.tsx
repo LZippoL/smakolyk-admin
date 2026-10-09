@@ -39,6 +39,9 @@ export const App: React.FC = () => {
   // Authentication State
   const [session, setSession] = useState<any>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [editorId, setEditorId] = useState<string | null>(null);
+  const [isRoleChecking, setIsRoleChecking] = useState(true);
+  const isEditor = Boolean(session?.user?.id && editorId === session.user.id);
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -101,7 +104,7 @@ export const App: React.FC = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsAuthChecking(false);
-    });
+    }).catch(() => setIsAuthChecking(false));
 
     const {
       data: { subscription }
@@ -111,6 +114,27 @@ export const App: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsRoleChecking(true);
+    setEditorId(null);
+    setRecipes([]); setArticles([]); setReviews([]); setUsersCount(0);
+    setSelectedRecipe(null); setSelectedArticle(null); setMode('list');
+    if (!session?.user?.id) { setIsRoleChecking(false); return; }
+    const verifyEditor = async () => {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user || user.id !== session.user.id) return;
+        const { data, error } = await supabase.from('content_editors').select('user_id').eq('user_id', user.id).maybeSingle();
+        if (!cancelled && !error && data) setEditorId(user.id);
+      } finally {
+        if (!cancelled) setIsRoleChecking(false);
+      }
+    };
+    void verifyEditor().catch(() => {});
+    return () => { cancelled = true; };
+  }, [session?.user?.id]);
 
   // Browser Notifications state
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => {
@@ -140,7 +164,7 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (session) {
+    if (session && isEditor) {
       loadData();
 
       // Listen for realtime review inserts
@@ -173,7 +197,7 @@ export const App: React.FC = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [session]);
+  }, [session, isEditor]);
 
   const handleTabChange = (tab: 'recipes' | 'articles' | 'reviews' | 'users') => {
     setActiveTab(tab);
@@ -257,7 +281,7 @@ export const App: React.FC = () => {
   };
 
   // Loading state while checking authentication
-  if (isAuthChecking) {
+  if (isAuthChecking || (session && isRoleChecking)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-900 text-stone-100">
         <div className="w-9 h-9 rounded-full border-3 border-brand-500 border-t-transparent animate-spin" />
@@ -269,7 +293,18 @@ export const App: React.FC = () => {
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-950 p-4">
-        <AdminAuthGate onAuthenticated={() => loadData()} />
+        <AdminAuthGate onAuthenticated={() => {}} />
+      </div>
+    );
+  }
+
+  if (!isEditor) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-stone-950 text-stone-100 p-6">
+        <ShieldCheck className="w-10 h-10 text-amber-500" />
+        <h1 className="text-xl font-bold">Доступ лише для редакторів</h1>
+        <p>Цей акаунт не має прав керування сайтом.</p>
+        <Button onClick={handleLogout}>Вийти</Button>
       </div>
     );
   }
