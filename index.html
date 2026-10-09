@@ -1,25 +1,17 @@
-<!DOCTYPE html>
-<html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Смаколик — Адмін-панель</title>
-
-    <!-- PWA Settings & Web App Manifest -->
-    <link rel="manifest" href="/smakolyk-admin/manifest.json" />
-    <meta name="theme-color" content="#ea580c" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Смаколик CMS" />
-
-    <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="/smakolyk-admin/icon.svg" />
-    <link rel="apple-touch-icon" href="/smakolyk-admin/icon-192.png" />
-    <script type="module" crossorigin src="/smakolyk-admin/assets/index-kTbCAmfC.js"></script>
-    <link rel="stylesheet" crossorigin href="/smakolyk-admin/assets/index-DobD5KQW.css">
-  </head>
-  <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 font-sans antialiased min-h-screen">
-    <div id="root"></div>
-  </body>
-</html>
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Адмінку перенесено</title></head>
+<body><p>Адмінку перенесено: <a href="https://admin.culinorium.com/">admin.culinorium.com</a></p>
+<script>
+(async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js');
+      await registration.update();
+    } catch {}
+  }
+  if ('caches' in window) {
+    try { await Promise.all((await caches.keys()).filter(name => name.startsWith('smakolyk-admin')).map(name => caches.delete(name))); } catch {}
+  }
+  location.replace('https://admin.culinorium.com/');
+})();
+</script></body></html>
